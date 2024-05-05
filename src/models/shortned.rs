@@ -27,33 +27,35 @@ impl Shortned {
         }
     }
 
-    pub async fn get_by_id(db: &Connection, id: u32) -> Shortned {
-        let row = db
+    pub async fn get_by_id(
+        db: &Connection,
+        id: u32,
+    ) -> Result<Option<Shortned>, Box<dyn std::error::Error>> {
+        let mut rows = db
             .query("SELECT * FROM links WHERE id = ?1", params![id])
-            .await
-            .unwrap()
-            .next()
-            .await
-            .unwrap()
-            .unwrap();
+            .await?;
 
-        let shortned = de::from_row::<Shortned>(&row).unwrap();
-
-        shortned
+        if let Some(row) = rows.next().await? {
+            let res = de::from_row::<Shortned>(&row)?;
+            Ok(Some(res))
+        } else {
+            Ok(None)
+        }
     }
 
-    pub async fn get_by_name(db: &Connection, name: String) -> Shortned {
-        let row = db
+    pub async fn get_by_name(
+        db: &Connection,
+        name: String,
+    ) -> Result<Option<Shortned>, Box<dyn std::error::Error>> {
+        let mut rows = db
             .query("SELECT * FROM links WHERE name = ?1", params![name])
-            .await
-            .unwrap()
-            .next()
-            .await
-            .unwrap()
-            .unwrap();
+            .await?;
 
-        let shortned = de::from_row::<Shortned>(&row).unwrap();
-
-        shortned
+        if let Some(row) = rows.next().await? {
+            let res = de::from_row::<Shortned>(&row)?;
+            Ok(Some(res))
+        } else {
+            Ok(None)
+        }
     }
 }

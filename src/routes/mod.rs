@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::web;
 mod link;
 
 pub fn config(cfg: &mut web::ServiceConfig) {

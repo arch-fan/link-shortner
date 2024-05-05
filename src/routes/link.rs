@@ -1,24 +1,34 @@
-use crate::models::shortned::Shortned;
-use actix_web::{get, web, Responder};
-use libsql::Connection;
-use serde::Serialize;
+use std::sync::Arc;
 
-#[derive(Serialize)]
-struct OkResponse<T: Serialize> {
-    status: String,
-    body: T,
-}
+use crate::{models::shortned::Shortned, responses::ErrResponse};
+use actix_web::HttpResponse;
+use actix_web::{
+    get,
+    web::{self, Data, Path},
+    Responder,
+};
+use libsql::Database;
 
 #[get("/{name}")]
-async fn get_link(params: web::Path<String>, db: web::Data<Connection>) -> impl Responder {
+async fn get_link(params: Path<String>, db: Data<Arc<Database>>) -> impl Responder {
     let name = params.into_inner();
 
-    let link = Shortned::get_by_name(&db, name).await;
+    let conn = db.connect().unwrap();
 
-    web::Json(OkResponse {
-        status: "ok".to_string(),
-        body: link,
-    })
+    let res = Shortned::get_by_name(&conn, name).await;
+
+    if let Err(e) = res {
+        return HttpResponse::InternalServerError().json(ErrResponse {
+            message: e.to_string(),
+        });
+    }
+
+    let row = res.unwrap();
+
+    match row {
+        Some(row) => HttpResponse::Ok().json(row),
+        None => HttpResponse::NotFound().finish(),
+    }
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
