@@ -27,22 +27,6 @@ impl Shortned {
         }
     }
 
-    pub async fn get_by_id(
-        db: &Connection,
-        id: u32,
-    ) -> Result<Option<Shortned>, Box<dyn std::error::Error>> {
-        let mut rows = db
-            .query("SELECT * FROM links WHERE id = ?1", params![id])
-            .await?;
-
-        if let Some(row) = rows.next().await? {
-            let res = de::from_row::<Shortned>(&row)?;
-            Ok(Some(res))
-        } else {
-            Ok(None)
-        }
-    }
-
     pub async fn get_by_name(
         db: &Connection,
         name: String,
@@ -57,5 +41,19 @@ impl Shortned {
         } else {
             Ok(None)
         }
+    }
+
+    pub async fn get_all_links(
+        db: &Connection,
+    ) -> Result<Vec<Shortned>, Box<dyn std::error::Error>> {
+        let mut rows = db.query("SELECT * FROM links", ()).await?;
+
+        let mut links: Vec<Shortned> = Vec::new();
+
+        while let Some(row) = rows.next().await? {
+            links.push(de::from_row(&row)?)
+        }
+
+        Ok(links)
     }
 }

@@ -32,5 +32,5 @@ async fn get_link(params: Path<String>, db: Data<Arc<Database>>) -> impl Respond
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/link").service(get_link));
+    cfg.service(get_link);
 }

@@ -6,10 +6,13 @@ use actix_cors::Cors;
 use actix_files as fs;
 use actix_web::{
     get,
+    middleware::{Logger, NormalizePath},
     web::{self, Data, Path, Redirect},
     App, Either, HttpResponse, HttpServer, Responder,
 };
 use dotenvy::{dotenv, var};
+use env_logger::Env;
+use fs::NamedFile;
 use libsql::{Builder, Database};
 use models::shortned::Shortned;
 use std::sync::Arc;
@@ -21,8 +24,6 @@ pub const PORT: u16 = 3000;
 async fn redirect(params: Path<String>, db: Data<Arc<Database>>) -> impl Responder {
     let name = params.into_inner();
 
-    println!("logging");
-
     let conn = db.connect().unwrap();
 
     match Shortned::get_by_name(&conn, name).await {
@@ -32,6 +33,11 @@ async fn redirect(params: Path<String>, db: Data<Arc<Database>>) -> impl Respond
         },
         Err(e) => Either::Right(HttpResponse::from_error(e)),
     }
+}
+
+#[get("/404")]
+async fn not_found() -> actix_web::Result<NamedFile> {
+    Ok(NamedFile::open("static/404.html")?)
 }
 
 #[actix_web::main]
@@ -49,6 +55,8 @@ async fn main() -> std::io::Result<()> {
 
     println!("Listening on http://{HOST}:{PORT}");
 
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
+
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_header()
@@ -56,10 +64,14 @@ async fn main() -> std::io::Result<()> {
             .allow_any_origin();
 
         App::new()
+            .wrap(NormalizePath::trim())
+            .wrap(Logger::default())
             .wrap(cors)
+            .service(fs::Files::new("/admin", "static/").index_file("index.html"))
             .app_data(Data::new(Arc::clone(&db)))
-            .service(redirect)
             .service(web::scope("/api").configure(routes::config))
+            .service(redirect)
+            .service(not_found)
     })
     .bind((HOST, PORT))?
     .run()
