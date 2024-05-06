@@ -1,4 +1,4 @@
-use actix_web::{cookie::Cookie, guard::GuardContext, http::header};
+use actix_web::{cookie::Cookie, guard::GuardContext};
 use chrono::{Duration, TimeDelta, Utc};
 use dotenvy::var;
 use jsonwebtoken::{self, DecodingKey, EncodingKey, Header, Validation};
@@ -8,13 +8,12 @@ pub const DURATION: TimeDelta = Duration::days(365);
 pub const COOKIE_NAME: &str = "token";
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
+pub struct Claims {
     pub exp: usize,
     pub username: String,
 }
 
 pub fn encode(username: String) -> String {
-    let now = Utc::now();
     let duration = Utc::now() + DURATION;
 
     let claims = Claims {
@@ -56,8 +55,8 @@ pub fn guard(ctx: &GuardContext) -> bool {
     }
 }
 
-pub fn get_duration() -> usize {
+pub fn get_expiration() -> i64 {
     let duration = Utc::now() + DURATION;
 
-    duration.timestamp() as usize
+    duration.timestamp()
 }

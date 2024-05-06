@@ -1,8 +1,5 @@
 use crate::{
-    lib::{
-        jwt,
-        slug::{self, sluggify},
-    },
+    lib::{jwt, slug::sluggify},
     models::shortned::Shortned,
     responses::ErrResponse,
 };

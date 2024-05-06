@@ -1,5 +1,4 @@
-use actix_web::{http::StatusCode, post, web, HttpResponse, HttpResponseBuilder, Responder};
-use chrono::Utc;
+use actix_web::{post, web, HttpResponse, Responder};
 use dotenvy::var;
 use serde::Deserialize;
 
@@ -31,7 +30,7 @@ async fn login(body: web::Json<LoginBody>) -> impl Responder {
             "{}={}; Path=/; HttpOnly; SameSite=Strict; Max-Age={}; {}",
             jwt::COOKIE_NAME,
             token,
-            jwt::get_duration(),
+            jwt::get_expiration(),
             if std::env::var("RUST_ENV").unwrap_or("DEV".to_string()) == "DEV" {
                 ""
             } else {
