@@ -1,3 +1,4 @@
+pub mod lib;
 pub mod models;
 pub mod responses;
 mod routes;

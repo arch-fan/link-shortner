@@ -56,4 +56,18 @@ impl Shortned {
 
         Ok(links)
     }
+
+    pub async fn create_link(
+        db: &Connection,
+        name: String,
+        link: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        db.execute(
+            "INSERT INTO links (name, link) VALUES (?1, ?2)",
+            params![name, link],
+        )
+        .await?;
+
+        Ok(())
+    }
 }
